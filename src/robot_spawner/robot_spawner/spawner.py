@@ -5,6 +5,8 @@ import argparse
 from rclpy.node import Node
 from ament_index_python.packages import get_package_share_directory
 from gazebo_msgs.srv import SpawnEntity
+from geometry_msgs.msg import PoseWithCovarianceStamped
+
 
 class Spawner(Node):
     def __init__(self, args):
@@ -15,6 +17,9 @@ class Spawner(Node):
         while not self.cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('service not available, waiting again...')
         self.req = SpawnEntity.Request()
+
+        self.publisher = self.create_publisher(PoseWithCovarianceStamped, 'initialpose', 1)
+
         self.args = args
 
     def send_request(self):
@@ -30,6 +35,16 @@ class Spawner(Node):
         self.req.initial_pose.position.y = float(self.args.initialY)
         self.req.initial_pose.position.z = float(self.args.initialZ)
 
+        if(self.args.publish_initial_position):
+            msg = PoseWithCovarianceStamped()
+            msg.header.frame_id = 'map'
+            msg.pose.pose.position.x = float(self.args.initialX)
+            msg.pose.pose.position.y = float(self.args.initialY)
+            msg.pose.pose.position.z = float(self.args.initialZ)
+            msg.pose.pose.orientation.w = float(1.0)
+            self.get_logger().info(f'Publishing Initial Position  \n X= {float(self.args.initialX)} \n Y = {float(self.args.initialY)} \n W = {float(self.args.rotation_z)}')
+            self.publisher.publish(msg)
+
         self.get_logger().info(
             f"Set robot name: {self.req.name}, namespace: {self.req.robot_namespace}, at x: {self.req.initial_pose.position.x} y: {self.req.initial_pose.position.y} z: {self.req.initial_pose.position.z}")
         self.get_logger().info("Sending service request to `/spawn_entity`")
@@ -42,6 +57,8 @@ def get_parser():
     parser.add_argument('-x', '--initialX', default=0.0, type = float)
     parser.add_argument('-y', '--initialY', default=0.0, type=float)
     parser.add_argument('-z', '--initialZ', default=0.0, type=float)
+    parser.add_argument('-w', '--rotation_z', default=0.0, type=float)
+    parser.add_argument('-pub', '--publish_initial_position', default=False, type=bool)
     return parser
 
 def main(args=None):
