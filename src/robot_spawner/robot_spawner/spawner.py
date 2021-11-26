@@ -64,7 +64,7 @@ def get_parser():
 def main(args=None):
     rclpy.init(args=args)
     parser = get_parser()
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     spawner_client = Spawner(args)
     spawner_client.send_request()
 
