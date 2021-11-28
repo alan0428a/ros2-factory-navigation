@@ -1,3 +1,26 @@
+robot_controller:
+  ros__parameters:
+    initial_pose:
+      x: -1.5
+      y: 2.5
+      rz: 0.0
+      rw: 1.0
+    wait_in_pose:
+      x: 2.0
+      y: 1.5
+      rz: 0.0
+      rw: 1.0
+    unload_pose:
+      x: 4.0
+      y: 0.0
+      rz: 0.0
+      rw: 1.0
+    wait_out_pose:
+      x: 2.0
+      y: 1.5
+      rz: 1.0
+      rw: 0.0
+
 amcl:
   ros__parameters:
     use_sim_time: True
@@ -232,10 +255,10 @@ global_costmap:
     ros__parameters:
       use_sim_time: True
 
-# map_server:
-#   ros__parameters:
-#     use_sim_time: True
-#     yaml_filename: "turtlebot3_world.yaml"
+map_server:
+  ros__parameters:
+    use_sim_time: True
+    yaml_filename: "factory.yaml"
 
 map_saver:
   ros__parameters:

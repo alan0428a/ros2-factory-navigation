@@ -31,14 +31,15 @@ def main():
     while True:
         navigator.debug(f'Current state = {state}')
         if state == State.INIT:
+            navigator.publishStatus("Initialize")
             # Wait for navigation to fully activate, since autostarting nav2
             navigator.waitUntilNav2Active()
             # navigator.waitTrafficControlCenterActive()
             state = State.LOADING
 
         elif state == State.GO_WAIT_IN:
+            navigator.publishStatus("Go unloading wait position")
             navigator.info('Go WAITIN position')
-
             navigator.goWaitInPose()
             prevState = state
             nextState = State.REQUEST_IN
@@ -46,17 +47,20 @@ def main():
 
         elif state == State.REQUEST_IN:
             navigator.info('Send request to traffic control server')
+            navigator.publishStatus("Reqeust permission")
             navigator.requestInPermission()
             state = State.WAIT
 
         elif state == State.WAIT:
-            navigator.info('Wait traffic control server send permission')            
+            navigator.info('Wait traffic control server send permission')
+            navigator.publishStatus("Wait unloading zone permission")            
             navigator.waitPermision()
             navigator.info('Received traffic control server send permission')
             state = State.GO_UNLOAD
         
         elif state == State.GO_UNLOAD:
             navigator.info('Go UNLOAD position')
+            navigator.publishStatus("Go UNLOAD position")
             navigator.goUnloadPose()
             prevState = state
             nextState = State.UNLOADING
@@ -64,12 +68,14 @@ def main():
 
         elif state == state.UNLOADING:
             navigator.info('Start unloading packages...')
+            navigator.publishStatus("Unloading...")
             time.sleep(3)
             navigator.info('Packages unloaded done, return to load position')
             state = State.GO_WAIT_OUT
 
         elif state == State.GO_WAIT_OUT:
             navigator.info('Go WAIT_OUT position')
+            navigator.publishStatus("Leave unloading zone")
             navigator.goWaitOutPose()
             prevState = state
             nextState = State.NOTIFY_OUT
@@ -82,6 +88,7 @@ def main():
         
         elif state == State.GO_LOAD:
             navigator.info('Go LOAD position')
+            navigator.publishStatus("Go loading position")
             navigator.goInitialPose()
             prevState = state
             nextState = State.LOADING
@@ -89,6 +96,7 @@ def main():
         
         elif state == State.LOADING:
             navigator.info('Start loading packages...')
+            navigator.publishStatus("Loading packages...")
             time.sleep(3)
             navigator.info('Packages loading done, go to unload position')
             state = State.GO_WAIT_IN

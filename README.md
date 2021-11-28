@@ -21,7 +21,7 @@ We need to launch the following nodes by order:
 In the localization step, we will provide the map file we just created at Mapping stage to nav2_nav_server node. This map and sensor data will be used to calculated robot's position using amcl algorithm.
 
 1. Run step 1~3 at Mapping stage
-1. `ros2 launch robot_navigation amcl.launch.py` Launch nav2 related nodes and rviz.
+1. `ros2 launch robot_navigation localization.launch.py` Launch nav2 related nodes and rviz.
 1. `ros2 service call /reinitialize_global_localization std_srvs/srv/Empty "{}"` We call the `/reinitialize_global_localization` to reset probability(amcl particle cloud) at every position. 
 1. `export TURTLEBOT3_MODEL=waffel_pi` Set robot model for keyboard control interface
 1. `ros2 run turtlebot3_teleop teleop_keyboard` Lauch turtlebot keyboarder control interface
@@ -30,7 +30,7 @@ In the localization step, we will provide the map file we just created at Mappin
 ## Navigation
 
 1. `ros2 launch factory_env factory.launch.py` Launch gazebo with pre-created world file.
-1. `ros2 launch robot_navigation amcl.launch.py` Launch nav2 related nodes and rviz.
+1. `ros2 launch robot_navigation localization.launch.py` Launch nav2 related nodes and rviz.
 1. `ros2 run robot_spawner spawner -n robot -x -1.0 -y 2.5 -pub True` Spawn a turtlebot at the factory world and publish initial position
 1. `ros2 launch robot_spawner state_publisher.launch.py` Launch robot_state_publisher to publish the transforms corresponding to the movable joints of the robot.
 1. `ros2 launch robot_navigation navigation.launch.py` Launch nav2 navigation stack

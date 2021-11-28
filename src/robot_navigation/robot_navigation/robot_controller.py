@@ -20,7 +20,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 
 class RobotController(Node):
     def __init__(self):
-        super().__init__('agv')
+        super().__init__('robot_controller')
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -49,6 +49,7 @@ class RobotController(Node):
         self.feedback = None
         self.status = None
         self.permission = False
+        self.id = self.get_namespace() + '.' + self.get_name()
 
         amcl_pose_qos = QoSProfile(
           durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
@@ -68,12 +69,13 @@ class RobotController(Node):
         self.initial_pose_pub = self.create_publisher(PoseWithCovarianceStamped,
                                                       'initialpose',
                                                       10)
-        self.requst_enter_pub = self.create_publisher(TrafficControlRequest, 'unload_zone_traffic_control', 10)
+        self.requst_enter_pub = self.create_publisher(TrafficControlRequest, '/unload_zone_traffic_control', 10)
         self.permission_sub = self.create_subscription(String,
                                                        '/unload_zone_permission',
                                                        self._receivePermissionCallback,
                                                        10)
-
+        
+        self.status_pub = self.create_publisher(String, 'agv_status', 10)
 
 
     def _initPoses(self):
@@ -119,14 +121,14 @@ class RobotController(Node):
 
     def notifyTrafficControlComplete(self):
         msg = TrafficControlRequest()
-        msg.name = self.get_name()
+        msg.name = self.id
         msg.action = 'REQ_OUT'
         self.requst_enter_pub.publish(msg)
     
     def requestInPermission(self):  
         self.permission = False
         msg = TrafficControlRequest()
-        msg.name = self.get_name()
+        msg.name = self.id
         msg.action = 'REQ_IN'
         self.requst_enter_pub.publish(msg)
 
@@ -135,6 +137,11 @@ class RobotController(Node):
         self.initial_pose_received = False
         self.initial_pose = initial_pose
         self._setInitialPose()
+    
+    def publishStatus(self, status: str):
+        msg = String()
+        msg.data = status
+        self.status_pub.publish(msg)
 
     def goToPose(self, pose):
         """Send a `NavToPose` action request."""
@@ -229,7 +236,7 @@ class RobotController(Node):
     def waitPermision(self):
         while not self.permission:
             rclpy.spin_once(self, timeout_sec=1.0)
-            self.info('Wait permission again')
+            self.info('Wait permission again...')
         return
 
     def waitUntilNav2Active(self):
@@ -337,7 +344,7 @@ class RobotController(Node):
             self.info('Setting initial pose')
             self._setInitialPose()
             self.info('Waiting for amcl_pose to be received')
-            rclpy.spin_once(self, timeout_sec=1.0)
+            rclpy.spin_once(self, timeout_sec=5.0)
         return
 
     def _amclPoseCallback(self, msg):
@@ -354,7 +361,7 @@ class RobotController(Node):
 
     def _receivePermissionCallback(self, msg):
         self.info(f'Received permission msg: {msg.data}')
-        if(msg.data == self.get_name()):
+        if msg.data == self.id:
             self.info('Permission received')
             self.permission = True
 
@@ -368,6 +375,7 @@ class RobotController(Node):
         return
 
     def _getPararmeter(self, name: str) -> float:
+        self.info(f'name: {name}, val: {self.get_parameter(name).get_parameter_value().double_value}')
         return self.get_parameter(name).get_parameter_value().double_value
 
     def info(self, msg):

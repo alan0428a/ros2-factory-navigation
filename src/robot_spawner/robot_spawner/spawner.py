@@ -6,6 +6,7 @@ from rclpy.node import Node
 from ament_index_python.packages import get_package_share_directory
 from gazebo_msgs.srv import SpawnEntity
 from geometry_msgs.msg import PoseWithCovarianceStamped
+import xml.etree.ElementTree as ET
 
 
 class Spawner(Node):
@@ -28,8 +29,28 @@ class Spawner(Node):
             get_package_share_directory("turtlebot3_gazebo"), "models",
             "turtlebot3_waffle", "model.sdf")
 
+        tree = ET.parse(sdf_file_path)
+        root = tree.getroot()
+
+        self.get_logger().info(f'Namespace is {self.args.namespace}')
+        if(self.args.namespace != ''):
+            # We need to remap the transform (/tf) topic so each robot has its own.
+            # We do this by adding `ROS argument entries` to the sdf file for
+            # each plugin broadcasting a transform. These argument entries provide the
+            # remapping rule, i.e. /tf -> /<robot_id>/tf
+            for plugin in root.iter('plugin'):
+                # TODO(orduno) Handle case if an sdf file from non-turtlebot is provided
+                if 'turtlebot3_diff_drive' in plugin.attrib.values():
+                    # The only plugin we care for now is 'diff_drive' which is
+                    # broadcasting a transform between`odom` and `base_footprint`
+                    break
+
+            ros_params = plugin.find('ros')
+            ros_tf_remap = ET.SubElement(ros_params, 'remapping')
+            ros_tf_remap.text = '/tf:=/' + self.req.robot_namespace + '/tf'        
+
         self.req.name = self.args.name
-        self.req.xml = open(sdf_file_path, 'r').read()
+        self.req.xml = ET.tostring(root, encoding='unicode')
         self.req.robot_namespace = self.args.namespace
         self.req.initial_pose.position.x = float(self.args.initialX)
         self.req.initial_pose.position.y = float(self.args.initialY)

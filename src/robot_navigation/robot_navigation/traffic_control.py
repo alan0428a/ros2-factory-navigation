@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos_event import QoSRequestedIncompatibleQoSInfo
-from std_msgs.msg import String
+from std_msgs.msg import String, UInt32, Bool
 from custom_interfaces.msg import TrafficControlRequest
 import queue
 import time
@@ -11,10 +11,12 @@ class TrafficControl(Node):
     def __init__(self):
         super().__init__('traffic_control_center')
         self.sub = self.create_subscription(TrafficControlRequest, 
-                                            'unload_zone_traffic_control',
+                                            '/unload_zone_traffic_control',
                                             self.receiveRequestCallback,
                                             10)
-        self.pubisher = self.create_publisher(String, '/unload_zone_permission', 10)
+        self.permissionPublisher = self.create_publisher(String, '/unload_zone_permission', 10)
+        self.completeCountPublisher = self.create_publisher(UInt32, '/complete_count', 10)
+        self.availabilityPublisher = self.create_publisher(Bool, '/zone_availability', 10)
 
         self.busy = False
         self.q = queue.Queue()
@@ -29,12 +31,15 @@ class TrafficControl(Node):
             self.get_logger().info(f'Receive request {action} from: {clientName}')
             self.enqueue(clientName)
             if not self.busy:
-                time.sleep(5)
+                time.sleep(2)
                 self.sendNextPermission()
 
         elif action == "REQ_OUT":
             self.get_logger().info(f'Receive request {action} from: {clientName}')
             self.completeCount += 1
+            msg = UInt32()
+            msg.data = self.completeCount
+            self.completeCountPublisher.publish(msg)
             self.get_logger().info(f'Complete count: {self.completeCount}')
             self.sendNextPermission()
 
@@ -59,9 +64,14 @@ class TrafficControl(Node):
             
             msg = String()
             msg.data = clientName
-            self.pubisher.publish(msg)
+            self.permissionPublisher.publish(msg)
         else:
             self.busy = False
+        
+        msg = Bool()
+        msg.data = not self.busy
+        self.availabilityPublisher.publish(msg)        
+
 
 
 def main(args=None):

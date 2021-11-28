@@ -26,7 +26,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'agv_demo=robot_navigation.agv_demo:main',
+            'agv_auto=robot_navigation.agv_auto:main',
             'traffic_control=robot_navigation.traffic_control:main'
         ],
     },
