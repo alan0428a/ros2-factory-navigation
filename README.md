@@ -35,3 +35,6 @@ In the localization step, we will provide the map file we just created at Mappin
 1. `ros2 launch robot_spawner state_publisher.launch.py` Launch robot_state_publisher to publish the transforms corresponding to the movable joints of the robot.
 1. `ros2 launch robot_navigation navigation.launch.py` Launch nav2 navigation stack
 1. Use the "Navigation2 Goal" button on Rviz interface to set goal pose. The nav2 stacks will plan a shortest path using local and global costmap shown on Rviz.
+
+
+`ros2 run robot_spawner spawner -n robot -x -2.0 -y 2.5` 

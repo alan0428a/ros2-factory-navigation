@@ -18,11 +18,11 @@ def generate_launch_description():
     amcl_cmd = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(robot_navigation_dir, 'launch', 'amcl.launch.py')))
     
-    # spawner_cmd = Node(
-    #     package='robot_spawner',
-    #     executable='spawner',
-    #     arguments=['-n', 'robot', '-x', '-1.0', '-y', '2.5'],
-    #     output='screen')
+    spawner_cmd = Node(
+        package='robot_spawner',
+        executable='spawner',
+        arguments=['-n', 'robot', '-x', '-2.0', '-y', '2.5'],
+        output='screen')
     
     publisher_cmd = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(robot_spawner_dir, 'launch', 'state_publisher.launch.py')))
@@ -34,7 +34,7 @@ def generate_launch_description():
 
     ld.add_action(gazebo_cmd)
     ld.add_action(amcl_cmd)
-    # ld.add_action(spawner_cmd)
+    ld.add_action(spawner_cmd)
     ld.add_action(publisher_cmd)
     ld.add_action(nav_cmd)
 
